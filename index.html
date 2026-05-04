@@ -1350,33 +1350,45 @@ var SHOPIFY_PRODUCT_IDS = {
   document.head.appendChild(s);
 })();
 
-function shopifyCheckout(keys){
-  if(!shopifyClient){
-    // Fallback: go to store directly
-    window.open('https://mrsugar.myshopify.com','_blank');
-    return;
-  }
-  var btn = event && event.target;
-  if(btn){ btn.textContent = 'Cargando...'; btn.disabled = true; }
-  shopifyClient.checkout.create().then(function(checkout){
-    var lineItems = keys.map(function(k){
-      return { variantId: productVariants[k], quantity: 1 };
-    }).filter(function(item){ return !!item.variantId; });
-    if(lineItems.length === 0){
-      window.open('https://mrsugar.myshopify.com','_blank');
-      return;
-    }
-    return shopifyClient.checkout.addLineItems(checkout.id, lineItems).then(function(c){
-      window.location.href = c.webUrl;
+function shopifyCheckout(keys, btnEl){
+  if(btnEl){ btnEl.textContent='⏳ Cargando...'; btnEl.disabled=true; }
+  function doCheckout(){
+    // Fetch any variants not yet loaded
+    var fetches=keys.filter(function(k){ return !productVariants[k]; }).map(function(k){
+      return shopifyClient.product.fetch(SHOPIFY_PRODUCT_IDS[k]).then(function(p){
+        if(p&&p.variants&&p.variants.length>0) productVariants[k]=p.variants[0].id;
+      });
     });
-  }).catch(function(){
-    window.open('https://mrsugar.myshopify.com','_blank');
-  });
+    Promise.all(fetches).then(function(){
+      return shopifyClient.checkout.create();
+    }).then(function(checkout){
+      var lineItems=keys.map(function(k){
+        return {variantId:productVariants[k],quantity:1};
+      }).filter(function(item){ return !!item.variantId; });
+      if(lineItems.length===0){ window.open('https://mrsugar.myshopify.com','_blank'); return; }
+      return shopifyClient.checkout.addLineItems(checkout.id,lineItems);
+    }).then(function(c){
+      window.location.href=c.webUrl;
+    }).catch(function(){
+      window.open('https://mrsugar.myshopify.com','_blank');
+    });
+  }
+  if(!shopifyClient){
+    // Wait up to 5s for SDK to load
+    var tries=0;
+    var wait=setInterval(function(){
+      tries++;
+      if(shopifyClient){ clearInterval(wait); doCheckout(); }
+      else if(tries>10){ clearInterval(wait); window.open('https://mrsugar.myshopify.com','_blank'); }
+    },500);
+  } else {
+    doCheckout();
+  }
 }
 
-function buyProduct(key){ shopifyCheckout([key]); }
-function buyKit(){ shopifyCheckout(['calm','balance','power','focus']); }
-function buySelected(keys){ shopifyCheckout(keys); }
+function buyProduct(key){ shopifyCheckout([key], event&&event.currentTarget); }
+function buyKit(){ shopifyCheckout(['calm','balance','power','focus'], event&&event.currentTarget); }
+function buySelected(keys){ shopifyCheckout(keys, event&&event.currentTarget); }
 
 </script>
 </body>
