@@ -500,7 +500,7 @@ footer strong{color:#ccc}
         <div class="qru-desc" id="upsellDesc">Los 4 adaptógenos juntos se potencian entre sí. Cuando combinas Ashwagandha + Reishi + Cordyceps + Lion's Mane, el efecto es sinérgico — no solo aditivo.</div>
         <div class="qru-pricing"><span class="qru-old">$2,046</span><span class="qru-new">$1,432</span><span class="qru-save">Ahorras $614 + Envío Gratis</span></div>
       </div>
-      <button class="qr-btn-main" id="mainCTABtn">Quiero The Inner Protocol — 30% OFF →</button>
+      <button class="qr-btn-main" id="mainCTABtn" onclick="buyKit()">Quiero The Inner Protocol — 30% OFF →</button>
       <button class="qr-btn-sec" id="singleBtn">Quiero solo mi selección →</button>
     </div>
   </div>
@@ -989,7 +989,7 @@ footer strong{color:#ccc}
           <li>Extracto estandarizado</li>
           <li>Envío estándar</li>
         </ul>
-        <button class="pricing-btn pricing-btn-outline" onclick="openQuiz()">Encontrar mi producto →</button>
+        <button class="pricing-btn pricing-btn-outline" onclick="openQuiz()">Hacer el quiz →</button>
       </div>
       <div class="pricing-card featured">
         <div class="pricing-badge">⭐ MÁS POPULAR · 30% OFF</div>
@@ -1006,7 +1006,7 @@ footer strong{color:#ccc}
           <li>Envío gratis incluido</li>
           <li>Empaque premium MR.Sugar</li>
         </ul>
-        <button class="pricing-btn pricing-btn-main" onclick="openQuiz()">Quiero el Kit Completo →</button>
+        <button class="pricing-btn pricing-btn-main" onclick="buyKit()">Quiero el Kit Completo →</button>
       </div>
       <div class="pricing-card">
         <div class="pricing-name">Pack 3 botellas</div>
@@ -1020,7 +1020,7 @@ footer strong{color:#ccc}
           <li>Extracto estandarizado</li>
           <li>Envío prioritario</li>
         </ul>
-        <button class="pricing-btn pricing-btn-outline" onclick="openQuiz()">Elegir mi producto →</button>
+        <button class="pricing-btn pricing-btn-outline" onclick="openQuiz()">Hacer el quiz →</button>
       </div>
     </div>
     <div class="pricing-note">🔒 Pago 100% seguro · <strong>Envío en 2–5 días</strong> · Sin contratos ni suscripciones</div>
@@ -1085,7 +1085,7 @@ footer strong{color:#ccc}
           <div class="bundle-price">$1,432</div>
           <div class="bundle-savings">Ahorras $614 · 30% OFF · Envío Gratis</div>
         </div>
-        <button class="bundle-cta" onclick="openQuiz()">Quiero The Inner Protocol →</button>
+        <button class="bundle-cta" onclick="buyKit()">Quiero The Inner Protocol →</button>
         <div class="bundle-trust">🔒 Pago seguro &nbsp;·&nbsp; 📦 Envío en 2–5 días &nbsp;·&nbsp; ✅ 100% Natural &nbsp;·&nbsp; 💬 Soporte en español</div>
       </div>
 
@@ -1250,7 +1250,9 @@ function showResult(){
     var save3=totalSelected-Math.round(totalSelected*0.8);
     document.getElementById('upsellDesc').textContent='Por $'+(1432-totalSelected)+' más obtienes el kit completo con los 4 productos: ahorras $614 vs precio individual, más envío gratis. El sistema completo siempre da mejores resultados que trabajar 3 frentes.';
     document.getElementById('singleBtn').style.display='';
+    var recCopy=recommended.slice();
     document.getElementById('singleBtn').textContent='Solo quiero los '+(isSingle?'2':'3')+' recomendados ($'+totalSelected+') →';
+    document.getElementById('singleBtn').onclick=function(){ buySelected(recCopy); };
     document.getElementById('mainCTABtn').textContent='Quiero el kit completo — 30% OFF ($1,432) →';
   }
 
@@ -1317,6 +1319,64 @@ function filterReviews(el, tag){
     }
   });
 }
+
+// ── Shopify Buy Button Integration ───────────────────────────────
+var shopifyClient = null;
+var productVariants = {};
+var SHOPIFY_PRODUCT_IDS = {
+  calm:    '7556452483131',
+  balance: '7556457463867',
+  power:   '7556518150203',
+  focus:   '7556506746939'
+};
+
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+  s.onload = function(){
+    shopifyClient = ShopifyBuy.buildClient({
+      domain: 'mrsugar.myshopify.com',
+      storefrontAccessToken: '47e9cb2a30053310a30713807bde3ed1'
+    });
+    // Pre-fetch all variant IDs
+    Object.keys(SHOPIFY_PRODUCT_IDS).forEach(function(key){
+      shopifyClient.product.fetch(SHOPIFY_PRODUCT_IDS[key]).then(function(product){
+        if(product && product.variants && product.variants.length > 0){
+          productVariants[key] = product.variants[0].id;
+        }
+      });
+    });
+  };
+  document.head.appendChild(s);
+})();
+
+function shopifyCheckout(keys){
+  if(!shopifyClient){
+    // Fallback: go to store directly
+    window.open('https://mrsugar.myshopify.com','_blank');
+    return;
+  }
+  var btn = event && event.target;
+  if(btn){ btn.textContent = 'Cargando...'; btn.disabled = true; }
+  shopifyClient.checkout.create().then(function(checkout){
+    var lineItems = keys.map(function(k){
+      return { variantId: productVariants[k], quantity: 1 };
+    }).filter(function(item){ return !!item.variantId; });
+    if(lineItems.length === 0){
+      window.open('https://mrsugar.myshopify.com','_blank');
+      return;
+    }
+    return shopifyClient.checkout.addLineItems(checkout.id, lineItems).then(function(c){
+      window.location.href = c.webUrl;
+    });
+  }).catch(function(){
+    window.open('https://mrsugar.myshopify.com','_blank');
+  });
+}
+
+function buyProduct(key){ shopifyCheckout([key]); }
+function buyKit(){ shopifyCheckout(['calm','balance','power','focus']); }
+function buySelected(keys){ shopifyCheckout(keys); }
 
 </script>
 </body>
