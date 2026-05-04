@@ -237,12 +237,12 @@ footer strong{color:#ccc}
 .quiz-option{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px}
 .quiz-option:hover{border-color:rgba(233,30,140,.4);background:#161616}
 .quiz-option.selected{border-color:var(--pink);background:rgba(233,30,140,.08)}
-.qo-icon{font-size:20px;width:30px;text-align:center;flex-shrink:0}
-.qo-text strong{display:block;font-size:14px;margin-bottom:1px}
+.qo-icon{font-size:20px;width:30px;text-align:center;flex-shrink:0;pointer-events:none}
+.qo-text{pointer-events:none;flex:1}.qo-text strong{display:block;font-size:14px;margin-bottom:1px}
 .qo-text small{font-size:12px;color:var(--muted)}
 .quiz-next{width:100%;margin-top:18px;background:var(--pink);color:#fff;border:none;padding:13px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;display:none}
 .quiz-next.visible{display:block}
-.qo-check{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:transparent;flex-shrink:0;margin-left:auto;transition:all .2s;background:transparent}
+.qo-check{pointer-events:none;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:transparent;flex-shrink:0;margin-left:auto;transition:all .2s;background:transparent}
 .quiz-option:hover .qo-check{border-color:rgba(233,30,140,.5)}
 .quiz-option.selected .qo-check{background:var(--pink);border-color:var(--pink);color:#fff}
 .quiz-hint{font-size:13px;color:var(--pink);margin-bottom:22px;font-weight:600}
@@ -341,13 +341,13 @@ footer strong{color:#ccc}
 .product-card:hover .product-card-img{animation:none;transform:scale(1.04);transition:transform .3s}
 
 .qr-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.qr-card{background:var(--card2);border:1px solid rgba(233,30,140,.2);border-radius:13px;padding:16px;display:flex;gap:14px;align-items:flex-start;text-align:left}
+.qr-card{background:var(--card2);border:1px solid rgba(233,30,140,.2);border-radius:13px;padding:18px;display:flex;gap:14px;align-items:flex-start;text-align:left}
 .qrc-icon{font-size:28px;flex-shrink:0;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center}
 .qrc-body{flex:1}
-.qrc-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pink);margin-bottom:2px}
-.qrc-headline{font-size:15px;font-weight:800;margin-bottom:4px}
-.qrc-reason{font-size:12px;color:#999;line-height:1.5}
-.qrc-match{font-size:11px;color:var(--green);font-weight:600;margin-top:5px}
+.qrc-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pink);margin-bottom:3px}
+.qrc-headline{font-size:18px;font-weight:800;margin-bottom:6px}
+.qrc-reason{font-size:14px;color:#999;line-height:1.6}
+.qrc-match{font-size:13px;color:var(--green);font-weight:600;margin-top:6px}
 .qr-combo-why{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:12px;padding:14px 16px;font-size:13px;color:#aaa;line-height:1.6;margin-bottom:14px;text-align:left}
 .qr-combo-why strong{color:#fff}
 
@@ -369,7 +369,7 @@ footer strong{color:#ccc}
 .rc-cat-fill{height:100%;background:linear-gradient(90deg,var(--pink),#ff6eb4);border-radius:3px}
 .rc-cat-label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}.rc-cat-label strong{color:#ccc}
 .rc-tags-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.rc-tag{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s}
+.rc-tag{cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s}
 .rc-tag:hover{border-color:rgba(233,30,140,.4);color:var(--pink)}
 .rc-tag-active{background:rgba(233,30,140,.1);border-color:rgba(233,30,140,.35);color:var(--pink)}
 .rc-sort-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:16px}
@@ -830,15 +830,15 @@ footer strong{color:#ccc}
 
     <!-- Filter tags -->
     <div class="rc-tags-row">
-      <span class="rc-tag rc-tag-active">Todos</span>
-      <span class="rc-tag">energía</span>
-      <span class="rc-tag">enfoque</span>
-      <span class="rc-tag">sueño</span>
-      <span class="rc-tag">estrés</span>
-      <span class="rc-tag">kit completo</span>
-      <span class="rc-tag">sin efectos</span>
-      <span class="rc-tag">emprendedores</span>
-      <span class="rc-tag">atletas</span>
+      <span class="rc-tag rc-tag-active" onclick="filterReviews(this,'todos')">Todos</span>
+      <span class="rc-tag" onclick="filterReviews(this,'energía')">energía</span>
+      <span class="rc-tag" onclick="filterReviews(this,'enfoque')">enfoque</span>
+      <span class="rc-tag" onclick="filterReviews(this,'sueño')">sueño</span>
+      <span class="rc-tag" onclick="filterReviews(this,'estrés')">estrés</span>
+      <span class="rc-tag" onclick="filterReviews(this,'kit completo')">kit completo</span>
+      <span class="rc-tag" onclick="filterReviews(this,'sin efectos')">sin efectos</span>
+      <span class="rc-tag" onclick="filterReviews(this,'emprendedores')">emprendedores</span>
+      <span class="rc-tag" onclick="filterReviews(this,'atletas')">atletas</span>
     </div>
 
     <!-- Sort bar -->
@@ -852,7 +852,7 @@ footer strong{color:#ccc}
     <!-- Individual reviews -->
     <div class="rc-reviews-list">
 
-      <div class="rc-review">
+      <div class="rc-review" data-tags="kit completo enfoque sueño">
         <div class="rc-rev-header">
           <div class="rc-rev-avatar">AV</div>
           <div>
@@ -867,7 +867,7 @@ footer strong{color:#ccc}
         <div class="rc-rev-helpful"><span>¿Útil?</span> <button class="rc-helpful-btn">👍 34</button> <button class="rc-helpful-btn">👎 1</button></div>
       </div>
 
-      <div class="rc-review">
+      <div class="rc-review" data-tags="kit completo emprendedores sin efectos enfoque">
         <div class="rc-rev-header">
           <div class="rc-rev-avatar">RV</div>
           <div>
@@ -882,7 +882,7 @@ footer strong{color:#ccc}
         <div class="rc-rev-helpful"><span>¿Útil?</span> <button class="rc-helpful-btn">👍 28</button> <button class="rc-helpful-btn">👎 0</button></div>
       </div>
 
-      <div class="rc-review">
+      <div class="rc-review" data-tags="estrés kit completo sueño">
         <div class="rc-rev-header">
           <div class="rc-rev-avatar" style="background:rgba(233,30,140,.15);color:var(--pink)">JA</div>
           <div>
@@ -897,7 +897,7 @@ footer strong{color:#ccc}
         <div class="rc-rev-helpful"><span>¿Útil?</span> <button class="rc-helpful-btn">👍 41</button> <button class="rc-helpful-btn">👎 2</button></div>
       </div>
 
-      <div class="rc-review">
+      <div class="rc-review" data-tags="energía enfoque atletas">
         <div class="rc-rev-header">
           <div class="rc-rev-avatar" style="background:rgba(245,158,11,.15);color:#f59e0b">MR</div>
           <div>
@@ -912,7 +912,7 @@ footer strong{color:#ccc}
         <div class="rc-rev-helpful"><span>¿Útil?</span> <button class="rc-helpful-btn">👍 52</button> <button class="rc-helpful-btn">👎 0</button></div>
       </div>
 
-      <div class="rc-review">
+      <div class="rc-review" data-tags="estrés sueño emprendedores">
         <div class="rc-rev-header">
           <div class="rc-rev-avatar" style="background:rgba(16,185,129,.15);color:#10b981">LP</div>
           <div>
@@ -927,7 +927,7 @@ footer strong{color:#ccc}
         <div class="rc-rev-helpful"><span>¿Útil?</span> <button class="rc-helpful-btn">👍 67</button> <button class="rc-helpful-btn">👎 1</button></div>
       </div>
 
-      <div class="rc-review rc-review-doctor">
+      <div class="rc-review rc-review-doctor" data-tags="kit completo sin efectos enfoque">
         <div class="rc-rev-header">
           <div class="rc-rev-avatar" style="background:rgba(59,130,246,.15);color:#3b82f6">DG</div>
           <div>
@@ -1139,8 +1139,8 @@ function toggleOption(value){
   if(count>0){
     nb.classList.add('visible');
     if(count===1&&!selectedOptions.has('all')){
-      nb.textContent='Siguiente →';
-      counter.textContent='';
+      nb.textContent='Ver mis 2 productos →';
+      counter.textContent='✓ 1 área seleccionada — te recomendamos el dúo perfecto';
     } else if(count>=2){
       nb.textContent='Ver mi protocolo para '+count+' áreas →';
       counter.textContent='✓ Identificaste '+count+' áreas — el pack completo las resuelve todas';
@@ -1194,15 +1194,16 @@ function showResult(){
 
   var sel=Array.from(selectedOptions).filter(function(s){return s!=='all';});
   var isAll=selectedOptions.has('all')||selectedOptions.size>=4;
+  var isSingle=(!isAll&&sel.length===1);
 
-  // Build the 3-product recommendation
+  // Build product recommendation: 1 sel = 2 products, 2-3 sel = 3 products, all/4 = full kit
   var recommended=[];
   if(isAll||sel.length===0){
     recommended=['calm','balance','power','focus'];
   } else if(sel.length===1){
     var key=sel[0];
-    recommended=[key].concat(complements[key]||['balance','focus']);
-    recommended=recommended.slice(0,3);
+    var comp=complements[key]||['balance','focus'];
+    recommended=[key, comp[0]]; // only 2 products
   } else if(sel.length===2){
     var fill=['calm','balance','power','focus'].filter(function(k){return sel.indexOf(k)===-1;})[0];
     recommended=sel.concat([fill]).slice(0,3);
@@ -1218,7 +1219,7 @@ function showResult(){
   recommended.forEach(function(key,i){
     var p=catalog[key];
     if(!p)return;
-    var imgTag=p.img?'<img src="'+p.img+'" style="width:68px;height:68px;object-fit:cover;border-radius:10px;flex-shrink:0" alt="'+p.name+'">':'<div class="qrc-icon" style="background:'+p.bg+'">'+p.icon+'</div>';
+    var imgTag=p.img?'<img src="'+p.img+'" style="width:140px;height:140px;object-fit:cover;border-radius:14px;flex-shrink:0" alt="'+p.name+'">':'<div class="qrc-icon" style="background:'+p.bg+'">'+p.icon+'</div>';
     cardsHtml+='<div class="qr-card"><div class="qrc-num">'+(i+1)+'</div>'+imgTag+'<div class="qrc-body"><div class="qrc-name">'+p.name+' · $'+p.price+'</div><div class="qrc-headline">'+p.headline+'</div><div class="qrc-reason">'+p.reason+'</div><div class="qrc-match">✓ '+p.match+'</div></div></div>';
   });
   cardsHtml+='</div>';
@@ -1229,7 +1230,8 @@ function showResult(){
   if(isAll){
     whyEl.innerHTML='<strong>¿Por qué los 4 juntos?</strong> Los adaptógenos se potencian entre sí: Ashwagandha calma el eje del estrés, Reishi da la base inmune, Cordyceps activa la energía y Lion\'s Mane enfoca la mente. Juntos producen un efecto sinérgico que ninguno logra solo.';
   } else {
-    whyEl.innerHTML='<strong>¿Por qué estos 3?</strong> Basado en lo que describiste, esta combinación ataca tus áreas clave de forma sinérgica. Cada uno refuerza el trabajo del otro para darte resultados más rápidos y duraderos.';
+    var whyCount=isSingle?'2':'3';
+    whyEl.innerHTML='<strong>¿Por qué estos '+whyCount+'?</strong> Basado en lo que describiste, esta combinación ataca tus áreas clave de forma sinérgica. Cada uno refuerza el trabajo del otro para darte resultados más rápidos y duraderos.';
   }
 
   // Titles
@@ -1242,13 +1244,13 @@ function showResult(){
     document.getElementById('mainCTABtn').textContent='Quiero The Inner Protocol — 30% OFF ($1,432) →';
   } else {
     document.getElementById('resultTitle').textContent='Tu recomendación personalizada:';
-    document.getElementById('resultSub').textContent='Estos 3 productos atacan exactamente lo que describiste. Total: $'+totalSelected+'.';
+    document.getElementById('resultSub').textContent='Estos '+(isSingle?'2':'3')+' productos atacan exactamente lo que describiste. Total: $'+totalSelected+'.';
     document.getElementById('upsellDivider').style.display='';
     document.getElementById('upsellBlock').style.display='';
     var save3=totalSelected-Math.round(totalSelected*0.8);
     document.getElementById('upsellDesc').textContent='Por $'+(1432-totalSelected)+' más obtienes el kit completo con los 4 productos: ahorras $614 vs precio individual, más envío gratis. El sistema completo siempre da mejores resultados que trabajar 3 frentes.';
     document.getElementById('singleBtn').style.display='';
-    document.getElementById('singleBtn').textContent='Solo quiero los 3 recomendados ($'+totalSelected+') →';
+    document.getElementById('singleBtn').textContent='Solo quiero los '+(isSingle?'2':'3')+' recomendados ($'+totalSelected+') →';
     document.getElementById('mainCTABtn').textContent='Quiero el kit completo — 30% OFF ($1,432) →';
   }
 
@@ -1301,6 +1303,21 @@ function toggleFaq(el){
   tick();
   setInterval(tick,1000);
 })();
+// ── Review Filters ────────────────────────────────────────────────
+function filterReviews(el, tag){
+  document.querySelectorAll('.rc-tag').forEach(function(t){t.classList.remove('rc-tag-active')});
+  el.classList.add('rc-tag-active');
+  var reviews=document.querySelectorAll('.rc-review');
+  reviews.forEach(function(r){
+    if(tag==='todos'){
+      r.style.display='';
+    } else {
+      var tags=(r.getAttribute('data-tags')||'').toLowerCase();
+      r.style.display=tags.indexOf(tag.toLowerCase())!==-1?'':'none';
+    }
+  });
+}
+
 </script>
 </body>
 </html>
