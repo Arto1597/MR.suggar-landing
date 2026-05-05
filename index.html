@@ -1147,11 +1147,11 @@ footer strong{color:#ccc}
             <span class="prod-pick-price" id="pp-price-calm">$549</span>
             <div class="prod-qty-row">
               <div class="prod-qty-controls">
-                <button class="qty-btn" onclick="changeQty('calm',-1)">−</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('calm',-1)">−</button>
                 <span class="qty-num" id="pp-qty-calm">1</span>
-                <button class="qty-btn" onclick="changeQty('calm',1)">+</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('calm',1)">+</button>
               </div>
-              <button class="prod-add-btn" onclick="buyProductQty('calm')">Agregar →</button>
+              <button type="button" class="prod-add-btn" onclick="event.stopPropagation();buyProductQty('calm')">Agregar →</button>
             </div>
           </div>
           <div class="prod-pick-btn">
@@ -1160,11 +1160,11 @@ footer strong{color:#ccc}
             <span class="prod-pick-price" id="pp-price-balance">$499</span>
             <div class="prod-qty-row">
               <div class="prod-qty-controls">
-                <button class="qty-btn" onclick="changeQty('balance',-1)">−</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('balance',-1)">−</button>
                 <span class="qty-num" id="pp-qty-balance">1</span>
-                <button class="qty-btn" onclick="changeQty('balance',1)">+</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('balance',1)">+</button>
               </div>
-              <button class="prod-add-btn" onclick="buyProductQty('balance')">Agregar →</button>
+              <button type="button" class="prod-add-btn" onclick="event.stopPropagation();buyProductQty('balance')">Agregar →</button>
             </div>
           </div>
           <div class="prod-pick-btn">
@@ -1173,11 +1173,11 @@ footer strong{color:#ccc}
             <span class="prod-pick-price" id="pp-price-power">$499</span>
             <div class="prod-qty-row">
               <div class="prod-qty-controls">
-                <button class="qty-btn" onclick="changeQty('power',-1)">−</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('power',-1)">−</button>
                 <span class="qty-num" id="pp-qty-power">1</span>
-                <button class="qty-btn" onclick="changeQty('power',1)">+</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('power',1)">+</button>
               </div>
-              <button class="prod-add-btn" onclick="buyProductQty('power')">Agregar →</button>
+              <button type="button" class="prod-add-btn" onclick="event.stopPropagation();buyProductQty('power')">Agregar →</button>
             </div>
           </div>
           <div class="prod-pick-btn">
@@ -1186,11 +1186,11 @@ footer strong{color:#ccc}
             <span class="prod-pick-price" id="pp-price-focus">$499</span>
             <div class="prod-qty-row">
               <div class="prod-qty-controls">
-                <button class="qty-btn" onclick="changeQty('focus',-1)">−</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('focus',-1)">−</button>
                 <span class="qty-num" id="pp-qty-focus">1</span>
-                <button class="qty-btn" onclick="changeQty('focus',1)">+</button>
+                <button type="button" class="qty-btn" onclick="event.stopPropagation();changeQty('focus',1)">+</button>
               </div>
-              <button class="prod-add-btn" onclick="buyProductQty('focus')">Agregar →</button>
+              <button type="button" class="prod-add-btn" onclick="event.stopPropagation();buyProductQty('focus')">Agregar →</button>
             </div>
           </div>
         </div>
@@ -1408,6 +1408,7 @@ function buyProductQty(key){
   cartItems[key] = (cartItems[key]||0) + qty;
   renderCart();
   showMiniCart();
+  if(document.activeElement) document.activeElement.blur();
   var totalQ = Object.keys(cartItems).filter(function(k){return cartItems[k]>0;}).reduce(function(s,k){return s+cartItems[k];},0);
   if(totalQ>=3)       showToast('¡30% OFF + Envío Gratis aplicado! 🎉','🎉','success');
   else if(totalQ===2) showToast('¡Solo 1 más → 30% OFF + Envío Gratis!','🚀','warning');
