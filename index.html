@@ -1309,16 +1309,20 @@ function sfFetch(query){
 })();
 
 function sfCheckout(items){
-  var btn=document.querySelector('.mc-checkout-btn');
-  if(btn){btn.textContent='Procesando...';btn.disabled=true;}
+  // sfCheckout ONLY navigates — callers manage their own button state
   function buildUrl(){
     var parts=items.map(function(i){
       var vid=storefrontVariants[i.key];
       if(!vid) return null;
       return vid.split('/').pop()+':'+i.qty;
     }).filter(Boolean);
-    if(!parts.length){showToast('Error cargando. Reintenta.','!');if(btn){btn.textContent='Ir al pago';btn.disabled=false;}return;}
-    var url='https://mrsugar.myshopify.com/cart/'+parts.join(',');
+    if(!parts.length){showToast('Error cargando. Reintenta.','!');return;}
+    var totalQty=items.reduce(function(s,i){return s+i.qty;},0);
+    var distinct=items.length;
+    var code='';
+    if(totalQty>=3)              code='MRSUGAR30';
+    else if(totalQty===2&&distinct>=2) code='MRSUGAR20';
+    var url='https://mrsugar.myshopify.com/cart/'+parts.join(',')+(code?'?discount='+code:'');
     window.location.href=url;
   }
   var missing=items.filter(function(i){return !storefrontVariants[i.key];});
@@ -1335,7 +1339,6 @@ function sfCheckout(items){
       buildUrl();
     }).catch(function(){
       showToast('Error de conexion. Intenta de nuevo.','!');
-      if(btn){btn.textContent='Ir al pago';btn.disabled=false;}
     });
   } else { buildUrl(); }
 }
@@ -1861,7 +1864,6 @@ function checkoutCart(){
   var keys = Object.keys(cartItems).filter(function(k){ return cartItems[k]>0; });
   if(keys.length===0){ showToast('Tu carrito está vacío','!'); return; }
   var btn = document.querySelector('.mc-checkout-btn');
-  if(btn && btn.disabled) return;
   if(btn){ btn.textContent='Procesando...'; btn.disabled=true; }
   var items = keys.map(function(k){ return {key:k,qty:cartItems[k]}; });
   // Safety reset after 10s in case navigation fails
