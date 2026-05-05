@@ -1784,10 +1784,6 @@ function changeQty(key, delta){
   }
 }
 
-function buyProductQty(key){
-  var qty = prodQtys[key]||1;
-  sfCheckout([{key:key,qty:qty}]);
-}
 
 // ── Mini Cart ─────────────────────────────────────────────────────
 var cartItems = {};
