@@ -1270,7 +1270,12 @@ footer strong{color:#ccc}
 // ── Shopify Storefront API ────────────────────────────────────────
 var SF_ENDPOINT = 'https://mrsugar.myshopify.com/api/2024-01/graphql.json';
 var SF_TOKEN    = '47e9cb2a30053310a30713807bde3ed1';
-var storefrontVariants = {};
+var storefrontVariants = {
+  calm:    'gid://shopify/ProductVariant/43271917404219',
+  balance: 'gid://shopify/ProductVariant/43271927398459',
+  power:   'gid://shopify/ProductVariant/43272035860539',
+  focus:   'gid://shopify/ProductVariant/43272022589499'
+};
 var SF_PRODUCT_IDS = {
   calm:    'gid://shopify/Product/7556452483131',
   balance: 'gid://shopify/Product/7556457463867',
