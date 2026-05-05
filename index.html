@@ -1450,7 +1450,7 @@ function _buildResult(){
     calm:{icon:'🌙',bg:'rgba(124,58,237,.15)',img:imgCalm?imgCalm.src:'',name:'MR CALM',headline:'Calma tu sistema nervioso',reason:'Ashwagandha 5% withanólidos reduce el cortisol y regula la respuesta al estrés. Resultado: menos ansiedad, mejor sueño profundo.',match:'Para tu estrés y descanso',price:549},
     balance:{icon:'🍄',bg:'rgba(16,185,129,.15)',img:imgBalance?imgBalance.src:'',name:'MR BALANCE',headline:'Restaura tu equilibrio interior',reason:'Reishi 30% polisacáridos modula el sistema inmune y regula la inflamación sistémica. Tu cuerpo vuelve a su baseline natural.',match:'Para reequilibrar tu organismo',price:499},
     power:{icon:'⚡',bg:'rgba(245,158,11,.15)',img:imgPower?imgPower.src:'',name:'MR POWER',headline:'Enciende tu energía real',reason:'Cordyceps 30% activa la producción de ATP celular y mejora la oxigenación. Energía limpia todo el día, sin crash.',match:'Ataca tu agotamiento físico',price:499},
-    focus:{icon:'🧠',bg:'rgba(59,130,246,.15)',img:imgFocus?imgFocus.src:'',name:'MR FOCUS',headline:'Desbloquea tu claridad mental',reason:"Lion's Mane 30% estimula el NGF (factor de crecimiento nervioso). Neuronas más conectadas, enfoque sostenido, memoria más rápida.",match:'Elimina tu niebla mental',price:499}
+    focus:{icon:'🧠',bg:'rgba(59,130,246,.15)',img:imgFocus?imgFocus.src:'',name:'MR FOCUS',headline:'Desbloquea tu claridad mental',reason:"Lion\'s Mane 30% estimula el NGF (factor de crecimiento nervioso). Neuronas más conectadas, enfoque sostenido, memoria más rápida.",match:'Elimina tu niebla mental',price:499}
   };
 
   // Complements — what to add when only 1-2 selected
@@ -1491,7 +1491,7 @@ function _buildResult(){
       personalText='<div class="qrc-personalized">💡 '+personalReasons[primarySel][key]+'</div>';
     }
     var imgTag=p.img?'<img src="'+p.img+'" style="width:140px;height:140px;object-fit:cover;border-radius:14px;flex-shrink:0" alt="'+p.name+'">':'<div class="qrc-icon" style="background:'+p.bg+'">'+p.icon+'</div>';
-    cardsHtml+='<div class="qr-card"><div class="qrc-num">'+(i+1)+'</div>'+imgTag+'<div class="qrc-body"><div class="qrc-name">'+p.name+' · $'+p.price+'</div><div class="qrc-headline">'+p.headline+'</div><div class="qrc-reason">'+p.reason+'</div>'+personalText+'<div class="qrc-match">✓ '+p.match+'</div></div></div>';iv class="qrc-headline">'+p.headline+'</div><div class="qrc-reason">'+p.reason+'</div><div class="qrc-match">✓ '+p.match+'</div></div></div>';
+    cardsHtml+='<div class="qr-card"><div class="qrc-num">'+(i+1)+'</div>'+imgTag+'<div class="qrc-body"><div class="qrc-name">'+p.name+' · $'+p.price+'</div><div class="qrc-headline">'+p.headline+'</div><div class="qrc-reason">'+p.reason+'</div>'+personalText+'<div class="qrc-match">✓ '+p.match+'</div></div></div>';
   });
   cardsHtml+='</div>';
   document.getElementById('resultCards').innerHTML=cardsHtml;
