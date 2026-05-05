@@ -1318,7 +1318,10 @@ function sfCheckout(items){
       return vid.split('/').pop()+':'+i.qty;
     }).filter(Boolean);
     if(!parts.length){showToast('Error cargando. Reintenta.','!');if(btn){btn.textContent='Ir al pago';btn.disabled=false;}return;}
+    var totalQ=items.reduce(function(s,i){return s+i.qty;},0);
     var url='https://mrsugar.myshopify.com/cart/'+parts.join(',');
+    if(totalQ>=3) url+='?discount=MRS30';
+    else if(totalQ>=2) url+='?discount=MRS20';
     window.location.href=url;
   }
   var missing=items.filter(function(i){return !storefrontVariants[i.key];});
@@ -1859,10 +1862,13 @@ function toggleMiniCart(){
 
 function checkoutCart(){
   var keys = Object.keys(cartItems).filter(function(k){ return cartItems[k]>0; });
-  if(keys.length===0) return;
+  if(keys.length===0){ showToast('Tu carrito está vacío','!'); return; }
   var btn = document.querySelector('.mc-checkout-btn');
-  if(btn){ btn.textContent='⏳ Procesando...'; btn.disabled=true; }
+  if(btn && btn.disabled) return;
+  if(btn){ btn.textContent='Procesando...'; btn.disabled=true; }
   var items = keys.map(function(k){ return {key:k,qty:cartItems[k]}; });
+  // Safety reset after 10s in case navigation fails
+  setTimeout(function(){ if(btn){ btn.textContent='Ir al pago'; btn.disabled=false; } }, 10000);
   sfCheckout(items);
 }
 
