@@ -1,4 +1,77 @@
-<!DOCTYPE html>
+// ── Shopify Storefront API (direct, no SDK needed) ──────────────
+var SF_ENDPOINT = 'https://mrsugar.myshopify.com/api/2024-01/graphql.json';
+var SF_TOKEN    = '47e9cb2a30053310a30713807bde3ed1';
+var storefrontVariants = {};
+var SF_PRODUCT_IDS = {
+  calm:    'gid://shopify/Product/7556452483131',
+  balance: 'gid://shopify/Product/7556457463867',
+  power:   'gid://shopify/Product/7556518150203',
+  focus:   'gid://shopify/Product/7556506746939'
+};
+var idToKey = {
+  '7556452483131':'calm','7556457463867':'balance',
+  '7556518150203':'power','7556506746939':'focus'
+};
+
+function sfFetch(query){
+  return fetch(SF_ENDPOINT,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Shopify-Storefront-Access-Token':SF_TOKEN},
+    body:JSON.stringify({query:query})
+  }).then(function(r){return r.json();});
+}
+
+// Pre-fetch all variant IDs on load
+(function(){
+  var ids=Object.values(SF_PRODUCT_IDS).map(function(id){return '"'+id+'"';}).join(',');
+  sfFetch('{nodes(ids:['+ids+']){... on Product{id variants(first:1){edges{node{id}}}}}}')
+  .then(function(data){
+    (data.data.nodes||[]).forEach(function(p){
+      if(!p||!p.variants) return;
+      var numId=p.id.split('/').pop();
+      var key=idToKey[numId];
+      if(key) storefrontVariants[key]=p.variants.edges[0].node.id;
+    });
+  }).catch(function(){});
+})();
+
+function sfCheckout(items){
+  // items = [{key:'calm',qty:1}, ...]
+  var ready=items.filter(function(i){return storefrontVariants[i.key];});
+  var missing=items.filter(function(i){return !storefrontVariants[i.key];});
+  function doCreate(finalItems){
+    var lineItems=finalItems.map(function(i){
+      return '{variantId:"'+storefrontVariants[i.key]+'",quantity:'+i.qty+'}';
+    }).join(',');
+    sfFetch('mutation{checkoutCreate(input:{lineItems:['+lineItems+']}){checkout{webUrl}checkoutUserErrors{message}}}')
+    .then(function(data){
+      var url=data&&data.data&&data.data.checkoutCreate&&data.data.checkoutCreate.checkout&&data.data.checkoutCreate.checkout.webUrl;
+      if(url) window.location.href=url;
+      else { showToast('Error al crear checkout. Intenta de nuevo.','❌'); }
+    }).catch(function(){ showToast('Error de conexión. Intenta de nuevo.','❌'); });
+  }
+  if(missing.length>0){
+    var ids=missing.map(function(i){return '"'+SF_PRODUCT_IDS[i.key]+'"';}).join(',');
+    sfFetch('{nodes(ids:['+ids+']){... on Product{id variants(first:1){edges{node{id}}}}}}')
+    .then(function(data){
+      (data.data.nodes||[]).forEach(function(p){
+        if(!p||!p.variants) return;
+        var numId=p.id.split('/').pop();
+        var key=idToKey[numId];
+        if(key) storefrontVariants[key]=p.variants.edges[0].node.id;
+      });
+      doCreate(items);
+    }).catch(function(){ showToast('Error de conexión.','❌'); });
+  } else {
+    doCreate(items);
+  }
+}
+
+function buyProduct(key){ sfCheckout([{key:key,qty:1}]); }
+function buyKit(){ sfCheckout(Object.keys(SF_PRODUCT_IDS).map(function(k){return {key:k,qty:1};})); }
+function buySelected(keys){ sfCheckout(keys.map(function(k){return {key:k,qty:1};})); }
+
+// ── Review Filters<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -275,6 +348,21 @@ footer strong{color:#ccc}
 .qr-btn-main:hover{background:var(--pink-dark)}
 .qr-btn-sec{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);padding:11px;border-radius:50px;font-size:13px;cursor:pointer;transition:all .2s}
 .qr-btn-sec:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+/* ── Toast notification ── */
+.toast-notif{position:fixed;bottom:90px;right:20px;z-index:300;background:#111;border:1.5px solid rgba(233,30,140,.35);border-radius:12px;padding:12px 16px;font-size:13px;color:#fff;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.5);transform:translateY(20px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.toast-notif.show{transform:translateY(0);opacity:1}
+.toast-notif .t-emoji{font-size:18px;margin-right:6px}
+.toast-notif .t-msg{line-height:1.4}
+.toast-notif.success{border-color:rgba(74,222,128,.4)}
+.toast-notif.warning{border-color:rgba(251,191,36,.4)}
+/* ── Better cart UI ── */
+.mc-progress{margin-bottom:12px}
+.mc-prog-label{font-size:11px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between}
+.mc-prog-track{height:5px;background:#222;border-radius:10px;overflow:hidden}
+.mc-prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--pink),#ff6bc1);transition:width .4s ease}
+.mc-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:4px}
+@media(max-width:768px){.toast-notif{bottom:80px;left:12px;right:12px;max-width:none}}
+
 /* ── Image Lightbox ── */
 .lightbox-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(6px)}
 .lightbox-overlay.open{opacity:1;pointer-events:auto}
@@ -588,6 +676,11 @@ footer strong{color:#ccc}
         <div class="quiz-option" onclick="selectOption(3,'normal')" id="opt3-normal"><span class="qo-icon">😶</span><div class="qo-text"><strong>Siempre ha sido mi "normal"</strong><small>No recuerdo sentirme diferente</small></div></div>
       </div>
       <button class="quiz-next" id="next3" onclick="showResult()">Ver mi protocolo →</button>
+    </div>
+    <div class="quiz-loading" id="quizLoading" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 20px;min-height:260px">
+      <div class="ql-spinner"></div>
+      <div class="ql-text" id="qlText">Analizando tus respuestas<span class="ql-dots"><span>.</span><span>.</span><span>.</span></span></div>
+      <div class="ql-sub" id="qlSub">Combinando los extractos ideales para tu perfil</div>
     </div>
     <div class="quiz-result" id="quizResult">
       <div class="qr-badge" id="resultBadge">✓ Tu protocolo está listo</div>
@@ -1391,7 +1484,7 @@ function showResult(){
   document.getElementById('pb3').classList.add('done');
   // ── Loading animation ──
   var loading=document.getElementById('quizLoading');
-  loading.classList.add('active');
+  if(loading) loading.style.display='flex';
   var msgs=[
     ['Analizando tus respuestas','Identificando tus áreas de mejora...'],
     ['Evaluando combinaciones','Buscando los extractos ideales para ti...'],
@@ -1407,7 +1500,7 @@ function showResult(){
   },700);
   setTimeout(function(){
     clearInterval(msgInterval);
-    loading.classList.remove('active');
+    if(loading) loading.style.display='none';
     _buildResult();
   },2200);
 }
@@ -1745,35 +1838,7 @@ function changeQty(key, delta){
 
 function buyProductQty(key){
   var qty = prodQtys[key]||1;
-  if(!shopifyClient){
-    var tries=0;
-    var wait=setInterval(function(){
-      tries++;
-      if(shopifyClient){ clearInterval(wait); _doBuyQty(key,qty); }
-      else if(tries>10){ clearInterval(wait); window.open('https://mrsugar.myshopify.com','_blank'); }
-    },500);
-  } else {
-    _doBuyQty(key, qty);
-  }
-}
-
-function _doBuyQty(key, qty){
-  var fetchNeeded = !productVariants[key]
-    ? [shopifyClient.product.fetch(SHOPIFY_PRODUCT_IDS[key]).then(function(p){
-        if(p&&p.variants&&p.variants.length>0) productVariants[key]=p.variants[0].id;
-      })]
-    : [];
-  Promise.all(fetchNeeded).then(function(){
-    return shopifyClient.checkout.create();
-  }).then(function(checkout){
-    var varId = productVariants[key];
-    if(!varId){ window.open('https://mrsugar.myshopify.com','_blank'); return; }
-    return shopifyClient.checkout.addLineItems(checkout.id,[{variantId:varId,quantity:qty}]);
-  }).then(function(c){
-    window.location.href = c.webUrl;
-  }).catch(function(){
-    window.open('https://mrsugar.myshopify.com','_blank');
-  });
+  sfCheckout([{key:key,qty:qty}]);
 }
 
 // ── Mini Cart ─────────────────────────────────────────────────────
@@ -1793,12 +1858,33 @@ function addToCart(key){
   cartItems[key] = (cartItems[key]||0) + qty;
   var btn = document.getElementById('cadd-'+key);
   if(btn){
-    btn.textContent = '✓ Agregado ('+cartItems[key]+')';
+    btn.textContent = '✓ Agregado!';
     btn.classList.add('added');
     setTimeout(function(){ btn.textContent='Agregar al carrito'; btn.classList.remove('added'); },1400);
   }
   renderCart();
   showMiniCart();
+  // Smart toast
+  var u=Object.keys(cartItems).filter(function(k){return cartItems[k]>0;}).length;
+  if(u===1)      showToast('¡Agrega 1 producto más y obtén 20% OFF!','🎁','warning');
+  else if(u===2) showToast('¡Solo 1 más para 30% OFF + Envío Gratis!','🚀','warning');
+  else           showToast('¡30% OFF + Envío Gratis aplicado!','🎉','success');
+}
+
+var cartColors={calm:'#7c3aed',balance:'#10b981',power:'#f59e0b',focus:'#3b82f6'};
+
+function showToast(msg, emoji, type){
+  var el=document.getElementById('toastNotif');
+  var em=document.getElementById('toastEmoji');
+  var ms=document.getElementById('toastMsg');
+  if(!el) return;
+  if(em) em.textContent=emoji||'';
+  if(ms) ms.textContent=msg;
+  el.className='toast-notif '+(type||'');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){ el.classList.remove('show'); },3500);
 }
 
 function renderCart(){
@@ -1806,43 +1892,59 @@ function renderCart(){
   var itemsEl = document.getElementById('mcItems');
   var bubble  = document.getElementById('mcBubble');
   if(keys.length===0){
-    if(itemsEl) itemsEl.innerHTML='<div style="color:#666;font-size:13px;text-align:center;padding:8px">Tu carrito está vacío</div>';
+    if(itemsEl) itemsEl.innerHTML='<div style="color:#666;font-size:13px;text-align:center;padding:8px 0">Tu carrito está vacío</div>';
     if(bubble) bubble.classList.remove('visible');
-    var mc=document.getElementById('miniCart');
-    if(mc) mc.classList.remove('visible');
+    document.getElementById('mcProgress').style.display='none';
     return;
   }
-  // Count unique product types for discount
   var uniqueTypes = keys.length;
   var discount = uniqueTypes>=3 ? 0.30 : uniqueTypes===2 ? 0.20 : 0;
   var subtotal = keys.reduce(function(s,k){ return s + cartPrices[k]*cartItems[k]; },0);
   var total = Math.round(subtotal*(1-discount));
+  // Progress bar
+  var progEl=document.getElementById('mcProgress');
+  var progFill=document.getElementById('mcProgFill');
+  var progLabel=document.getElementById('mcProgLabel');
+  var progPct=document.getElementById('mcProgPct');
+  if(progEl) progEl.style.display='block';
+  if(uniqueTypes===1){
+    if(progFill) progFill.style.width='33%';
+    if(progLabel) progLabel.innerHTML='<span style="color:#fbbf24">🎁 Agrega 1 producto más → <strong>20% OFF</strong></span>';
+    if(progPct) progPct.textContent='1/3';
+  } else if(uniqueTypes===2){
+    if(progFill) progFill.style.width='66%';
+    if(progLabel) progLabel.innerHTML='<span style="color:#fbbf24">🚀 Solo 1 más → <strong>30% OFF + Envío Gratis</strong></span>';
+    if(progPct) progPct.textContent='2/3';
+  } else {
+    if(progFill) progFill.style.width='100%';
+    if(progLabel) progLabel.innerHTML='<span style="color:#4ade80">✅ <strong>30% OFF + Envío Gratis</strong> aplicado</span>';
+    if(progPct) progPct.textContent='';
+  }
   // Render items
   var html = '';
   keys.forEach(function(k){
-    html += '<div class="mc-item"><span class="mc-item-name">'+cartNames[k]+'</span><span class="mc-item-qty">×'+cartItems[k]+'</span><span class="mc-item-price">$'+(cartPrices[k]*cartItems[k]).toLocaleString()+'</span></div>';
+    var dot='<span class="mc-item-dot" style="background:'+cartColors[k]+'"></span>';
+    var linePrice=cartPrices[k]*cartItems[k];
+    html+='<div class="mc-item">'+dot+'<span class="mc-item-name">'+cartNames[k]+'</span><span class="mc-item-qty">×'+cartItems[k]+'</span><span class="mc-item-price">$'+linePrice.toLocaleString()+'</span></div>';
   });
   if(itemsEl) itemsEl.innerHTML = html;
   // Discount row
-  var discRow = document.getElementById('mcDiscountRow');
-  var discLabel= document.getElementById('mcDiscountLabel');
-  var discBadge= document.getElementById('mcDiscountBadge');
+  var discRow=document.getElementById('mcDiscountRow');
+  var discLabel=document.getElementById('mcDiscountLabel');
+  var discBadge=document.getElementById('mcDiscountBadge');
   if(discount>0){
-    discRow.style.display='flex';
-    discLabel.textContent = uniqueTypes+'  productos distintos';
-    discBadge.textContent = (discount*100)+'% OFF';
+    if(discRow) discRow.style.display='flex';
+    if(discLabel) discLabel.textContent='Descuento por '+uniqueTypes+' productos';
+    if(discBadge) discBadge.textContent=(discount*100)+'% OFF';
   } else {
-    discRow.style.display='none';
+    if(discRow) discRow.style.display='none';
   }
-  // Totals
-  var oldEl = document.getElementById('mcOldPrice');
-  var totEl = document.getElementById('mcTotalPrice');
-  if(discount>0 && oldEl) oldEl.textContent = '$'+subtotal.toLocaleString();
-  else if(oldEl) oldEl.textContent='';
-  if(totEl) totEl.textContent = '$'+total.toLocaleString();
-  // Bubble count
-  var totalQty = keys.reduce(function(s,k){ return s+cartItems[k]; },0);
-  if(bubble){ bubble.textContent='🛒'; bubble.classList.add('visible'); }
+  var oldEl=document.getElementById('mcOldPrice');
+  var totEl=document.getElementById('mcTotalPrice');
+  if(discount>0){ if(oldEl) oldEl.textContent='$'+subtotal.toLocaleString(); }
+  else { if(oldEl) oldEl.textContent=''; }
+  if(totEl) totEl.textContent='$'+total.toLocaleString();
+  if(bubble){ bubble.classList.add('visible'); }
 }
 
 function showMiniCart(){
@@ -1870,34 +1972,12 @@ function checkoutCart(){
   var keys = Object.keys(cartItems).filter(function(k){ return cartItems[k]>0; });
   if(keys.length===0) return;
   var btn = document.querySelector('.mc-checkout-btn');
-  if(btn){ btn.textContent='⏳ Cargando...'; btn.disabled=true; }
-  function doCartCheckout(){
-    var fetches = keys.filter(function(k){ return !productVariants[k]; }).map(function(k){
-      return shopifyClient.product.fetch(SHOPIFY_PRODUCT_IDS[k]).then(function(p){
-        if(p&&p.variants&&p.variants.length>0) productVariants[k]=p.variants[0].id;
-      });
-    });
-    Promise.all(fetches).then(function(){
-      return shopifyClient.checkout.create();
-    }).then(function(checkout){
-      var lineItems = keys.map(function(k){
-        return {variantId:productVariants[k], quantity:cartItems[k]};
-      }).filter(function(i){ return !!i.variantId; });
-      return shopifyClient.checkout.addLineItems(checkout.id, lineItems);
-    }).then(function(c){
-      window.location.href = c.webUrl;
-    }).catch(function(){
-      window.open('https://mrsugar.myshopify.com','_blank');
-      if(btn){ btn.textContent='Ir al checkout →'; btn.disabled=false; }
-    });
-  }
-  if(!shopifyClient){
-    var tries=0;
-    var w=setInterval(function(){ tries++; if(shopifyClient){clearInterval(w);doCartCheckout();} else if(tries>10){clearInterval(w);window.open('https://mrsugar.myshopify.com','_blank');} },500);
-  } else { doCartCheckout(); }
+  if(btn){ btn.textContent='⏳ Procesando...'; btn.disabled=true; }
+  var items = keys.map(function(k){ return {key:k,qty:cartItems[k]}; });
+  sfCheckout(items);
 }
 
-// ── Image Lightbox ────────────────────────────────────────────────
+// ── Image Lightbox// ── Image Lightbox ────────────────────────────────────────────────
 function openLightbox(imgEl, label){
   var overlay = document.getElementById('lightboxOverlay');
   var lbImg   = document.getElementById('lightboxImg');
@@ -1926,6 +2006,10 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeLigh
     <span class="mc-title">🛒 Tu carrito</span>
     <button class="mc-close" onclick="toggleMiniCart()">✕</button>
   </div>
+  <div class="mc-progress" id="mcProgress" style="display:none">
+    <div class="mc-prog-label"><span id="mcProgLabel">Agrega productos para descuento</span><span id="mcProgPct"></span></div>
+    <div class="mc-prog-track"><div class="mc-prog-fill" id="mcProgFill" style="width:0%"></div></div>
+  </div>
   <div class="mc-items" id="mcItems"></div>
   <div class="mc-divider"></div>
   <div class="mc-totals">
@@ -1949,5 +2033,6 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeLigh
   </div>
   <div class="lightbox-label" id="lightboxLabel"></div>
 </div>
+<div class="toast-notif" id="toastNotif"><span class="t-emoji" id="toastEmoji"></span><span class="t-msg" id="toastMsg"></span></div>
 </body>
 </html>
