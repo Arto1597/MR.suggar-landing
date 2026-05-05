@@ -1379,7 +1379,11 @@ function sfCheckout(items){
       return vid.split('/').pop()+':'+i.qty;
     }).filter(Boolean);
     if(!parts.length){showToast('Error cargando. Reintenta.','!');if(btn){btn.textContent='Ir al pago';btn.disabled=false;}return;}
-    window.location.href='https://mrsugar.myshopify.com/cart/'+parts.join(',');
+    var totalQ=items.reduce(function(s,i){return s+i.qty;},0);
+    var discCode= totalQ>=3 ? 'MRS30' : totalQ>=2 ? 'MRS20' : '';
+    var url='https://mrsugar.myshopify.com/cart/'+parts.join(',');
+    if(discCode) url+='?discount='+discCode;
+    window.location.href=url;
   }
   var missing=items.filter(function(i){return !storefrontVariants[i.key];});
   if(missing.length>0){
