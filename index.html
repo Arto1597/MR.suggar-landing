@@ -1372,20 +1372,14 @@ function sfFetch(query){
 function sfCheckout(items){
   var btn=document.querySelector('.mc-checkout-btn');
   if(btn){btn.textContent='Procesando...';btn.disabled=true;}
-  function doCreate(){
-    var lineItems=items.map(function(i){
-      return '{merchandiseId:"'+storefrontVariants[i.key]+'",quantity:'+i.qty+'}';
-    }).filter(function(s){return s.indexOf('undefined')<0;}).join(',');
-    if(!lineItems){ showToast('Error cargando productos. Reintenta.','❌'); if(btn){btn.textContent='Pagar ahora →';btn.disabled=false;} return; }
-    sfFetch('mutation{cartCreate(input:{lines:['+lineItems+']}){cart{checkoutUrl}userErrors{message}}}')
-    .then(function(data){
-      var url=data&&data.data&&data.data.cartCreate&&data.data.cartCreate.cart&&data.data.cartCreate.cart.checkoutUrl;
-      if(url){ window.location.href=url; }
-      else {
-        var msg=(data&&data.data&&data.data.cartCreate&&data.data.cartCreate.userErrors&&data.data.cartCreate.userErrors[0]&&data.data.cartCreate.userErrors[0].message)||'Error al procesar.';
-        showToast(msg,'❌'); if(btn){btn.textContent='Pagar ahora →';btn.disabled=false;}
-      }
-    }).catch(function(e){ console.error('checkout err',e); showToast('Error de conexión.','❌'); if(btn){btn.textContent='Pagar ahora →';btn.disabled=false;} });
+  function buildUrl(){
+    var parts=items.map(function(i){
+      var vid=storefrontVariants[i.key];
+      if(!vid) return null;
+      return vid.split('/').pop()+':'+i.qty;
+    }).filter(Boolean);
+    if(!parts.length){showToast('Error cargando. Reintenta.','!');if(btn){btn.textContent='Pagar ahora';btn.disabled=false;}return;}
+    window.location.href='https://mrsugar.myshopify.com/cart/'+parts.join(',');
   }
   var missing=items.filter(function(i){return !storefrontVariants[i.key];});
   if(missing.length>0){
@@ -1393,13 +1387,13 @@ function sfCheckout(items){
     sfFetch('{nodes(ids:['+mIds+']){... on Product{id variants(first:1){edges{node{id}}}}}}')
     .then(function(data){
       (data.data.nodes||[]).forEach(function(p){
-        if(!p||!p.variants) return;
+        if(!p||!p.variants)return;
         var k=idToKey[p.id.split('/').pop()];
         if(k) storefrontVariants[k]=p.variants.edges[0].node.id;
       });
-      doCreate();
-    }).catch(function(e){ console.error('variant fetch err',e); showToast('Error de conexión.','❌'); if(btn){btn.textContent='Pagar ahora →';btn.disabled=false;} });
-  } else { doCreate(); }
+      buildUrl();
+    }).catch(function(){showToast('Error de conexion.','!');if(btn){btn.textContent='Pagar ahora';btn.disabled=false;}});
+  } else { buildUrl(); }
 }
 
 function buyProduct(key){ sfCheckout([{key:key,qty:1}]); }
@@ -1847,60 +1841,65 @@ function renderCart(){
   var itemsEl = document.getElementById('mcItems');
   var bubble  = document.getElementById('mcBubble');
   if(keys.length===0){
-    if(itemsEl) itemsEl.innerHTML='<div style="color:#666;font-size:13px;text-align:center;padding:8px 0">Tu carrito está vacío</div>';
+    if(itemsEl) itemsEl.innerHTML='<div style="color:#666;font-size:13px;text-align:center;padding:8px 0">Tu carrito esta vacio</div>';
     if(bubble) bubble.classList.remove('visible');
-    document.getElementById('mcProgress').style.display='none';
+    var mc=document.getElementById('miniCart'); if(mc) mc.classList.remove('visible');
+    var pr=document.getElementById('mcProgress'); if(pr) pr.style.display='none';
     return;
   }
-  var totalQty = keys.reduce(function(s,k){ return s + cartItems[k]; }, 0);
-  var discount = totalQty>=3 ? 0.30 : totalQty===2 ? 0.20 : 0;
+  var totalQty   = keys.reduce(function(s,k){ return s+cartItems[k]; }, 0);
+  var uniqueCount= keys.length;
+  var discount = totalQty>=3 ? 0.30 : uniqueCount>=2 ? 0.20 : 0;
   var subtotal = keys.reduce(function(s,k){ return s + cartPrices[k]*cartItems[k]; },0);
   var total = Math.round(subtotal*(1-discount));
-  // Progress bar
   var progEl=document.getElementById('mcProgress');
   var progFill=document.getElementById('mcProgFill');
   var progLabel=document.getElementById('mcProgLabel');
   var progPct=document.getElementById('mcProgPct');
   if(progEl) progEl.style.display='block';
-  if(totalQty===1){
-    if(progFill) progFill.style.width='33%';
-    if(progLabel) progLabel.innerHTML='<span style="color:#fbbf24">🎁 Agrega 1 más → <strong>20% OFF</strong></span>';
-    if(progPct) progPct.textContent='1/3';
-  } else if(totalQty===2){
+  if(totalQty>=3){
+    if(progFill) progFill.style.width='100%';
+    if(progLabel) progLabel.innerHTML='<span style="color:#4ade80">&#10003; <strong>30% OFF + Envio Gratis</strong> aplicado</span>';
+    if(progPct) progPct.textContent='';
+  } else if(uniqueCount>=2){
     if(progFill) progFill.style.width='66%';
-    if(progLabel) progLabel.innerHTML='<span style="color:#fbbf24">🚀 Solo 1 más → <strong>30% OFF + Envío Gratis</strong></span>';
+    if(progLabel) progLabel.innerHTML='<span style="color:#fbbf24">20% OFF activo &mdash; 1 mas &rarr; <strong>30% OFF + Envio Gratis</strong></span>';
     if(progPct) progPct.textContent='2/3';
   } else {
-    if(progFill) progFill.style.width='100%';
-    if(progLabel) progLabel.innerHTML='<span style="color:#4ade80">✅ <strong>30% OFF + Envío Gratis</strong> aplicado</span>';
-    if(progPct) progPct.textContent='';
+    if(progFill) progFill.style.width='33%';
+    if(progLabel) progLabel.innerHTML='<span style="color:#fbbf24">Agrega productos distintos &rarr; <strong>20% OFF</strong></span>';
+    if(progPct) progPct.textContent='1/3';
   }
-  // Render items
   var html = '';
   keys.forEach(function(k){
     var dot='<span class="mc-item-dot" style="background:'+cartColors[k]+'"></span>';
     var linePrice=cartPrices[k]*cartItems[k];
-    html+='<div class="mc-item">'+dot+'<span class="mc-item-name">'+cartNames[k]+'</span><span class="mc-item-qty">×'+cartItems[k]+'</span><span class="mc-item-price">$'+linePrice.toLocaleString()+'</span></div>';
+    var rmBtn='<button onclick="removeFromCart(\''+k+'\')" title="Quitar" style="background:none;border:none;color:#666;cursor:pointer;font-size:14px;padding:0 0 0 6px;flex-shrink:0">x</button>';
+    html+='<div class="mc-item">'+dot+'<span class="mc-item-name">'+cartNames[k]+'</span><span class="mc-item-qty">x'+cartItems[k]+'</span><span class="mc-item-price">$'+linePrice.toLocaleString()+'</span>'+rmBtn+'</div>';
   });
   if(itemsEl) itemsEl.innerHTML = html;
-  // Discount row
   var discRow=document.getElementById('mcDiscountRow');
   var discLabel=document.getElementById('mcDiscountLabel');
   var discBadge=document.getElementById('mcDiscountBadge');
   if(discount>0){
     if(discRow) discRow.style.display='flex';
-    if(discLabel) discLabel.textContent='Descuento por '+totalQty+' productos';
+    if(discLabel) discLabel.textContent= totalQty>=3 ? 'Descuento por '+totalQty+' frascos' : 'Descuento por '+uniqueCount+' productos';
     if(discBadge) discBadge.textContent=(discount*100)+'% OFF';
-  } else {
-    if(discRow) discRow.style.display='none';
-  }
+  } else { if(discRow) discRow.style.display='none'; }
   var oldEl=document.getElementById('mcOldPrice');
   var totEl=document.getElementById('mcTotalPrice');
   if(discount>0){ if(oldEl) oldEl.textContent='$'+subtotal.toLocaleString(); }
   else { if(oldEl) oldEl.textContent=''; }
   if(totEl) totEl.textContent='$'+total.toLocaleString();
-  if(bubble){ bubble.classList.add('visible'); }
+  if(bubble) bubble.classList.add('visible');
 }
+function removeFromCart(key){
+  delete cartItems[key];
+  renderCart();
+  var n=cartNames[key]||'Producto'; showToast(n+' eliminado del carrito','!');
+}
+
+
 
 function showMiniCart(){
   var mc = document.getElementById('miniCart');
